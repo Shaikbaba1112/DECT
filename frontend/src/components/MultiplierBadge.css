@@ -1,0 +1,40 @@
+.multiplier-badge {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+  font-family: var(--font-mono);
+}
+
+.multiplier-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.multiplier-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.multiplier-badge.high {
+  color: var(--danger);
+  border-color: rgba(255,80,80,0.35);
+  background: rgba(255,80,80,0.08);
+}
+
+.multiplier-badge.normal {
+  color: var(--accent);
+  border-color: rgba(0,255,136,0.35);
+  background: rgba(0,255,136,0.08);
+}
+
+.multiplier-badge.low {
+  color: var(--blue);
+  border-color: rgba(100,150,255,0.35);
+  background: rgba(100,150,255,0.08);
+}

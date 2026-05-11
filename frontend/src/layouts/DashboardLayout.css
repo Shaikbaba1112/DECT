@@ -1,0 +1,21 @@
+.dashboard-layout {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.dashboard-main {
+  flex: 1;
+  overflow-y: auto;
+  transition: margin-left 0.3s ease;
+}
+
+.dashboard-main.sidebar-open  { margin-left: 220px; }
+.dashboard-main.sidebar-closed { margin-left: 0; }
