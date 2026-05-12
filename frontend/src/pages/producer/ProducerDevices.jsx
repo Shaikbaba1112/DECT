@@ -30,16 +30,17 @@ export default function ProducerDevices() {
   });
 
   const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await producerAPI.getDevices();
-      setDevices(res.data);
-    } catch {
-      showToast("Failed to load devices.", "error");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  setLoading(true);
+  try {
+    const res = await producerAPI.getDevices();
+    setDevices(res.data);
+  } catch (err) {
+    showToast("Failed to load devices.", "error");
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   useEffect(() => { load(); }, [load]);
 

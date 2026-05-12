@@ -42,6 +42,7 @@ from .views import (
     ConsumerStatsView,
 )
 from .admin_views import (
+
     AdminOverviewView,
     AdminUsersView,
     AdminUserDetailView,
@@ -61,6 +62,7 @@ from .admin_views import (
     AdminBroadcastView,
     ActiveBroadcastView,
     AdminPricingConfigView,
+    
 )
 
 urlpatterns = [
@@ -137,4 +139,5 @@ urlpatterns = [
     path("admin-api/audit-logs/",          AdminAuditLogView.as_view(),         name="admin-audit"),
     path("admin-api/broadcast/",           AdminBroadcastView.as_view(),        name="admin-broadcast"),
     path("admin-api/pricing-config/",      AdminPricingConfigView.as_view(),    name="admin-pricing"),
+
 ]

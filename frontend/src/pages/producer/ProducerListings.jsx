@@ -33,21 +33,25 @@ export default function ProducerListings() {
   });
 
   const load = useCallback(async () => {
-    setLoading(true);
+  setLoading(true);
+  try {
+    const params = filter !== "all" ? { status: filter } : {};
+    const listRes = await producerAPI.getListings(params);
+    setListings(listRes.data);
+
     try {
-      const params = filter !== "all" ? { status: filter } : {};
-      const [listRes, mktRes] = await Promise.all([
-        producerAPI.getListings(params),
-        marketAPI.getStats(),
-      ]);
-      setListings(listRes.data);
-      setMultiplier(mktRes.data.multiplier);
+      const mktRes = await marketAPI.getStats();
+      setMultiplier(mktRes.data?.multiplier ?? null);
     } catch {
-      showToast("Failed to load listings.", "error");
-    } finally {
-      setLoading(false);
+      setMultiplier(null);
     }
-  }, [filter]);
+  } catch (err) {
+    showToast("Failed to load listings.", "error");
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+}, [filter]);
 
   useEffect(() => { load(); }, [load]);
 

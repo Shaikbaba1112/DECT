@@ -88,7 +88,6 @@ class DeviceListView(APIView):
         serializer = EnergyDeviceSerializer(devices, many=True)
         return Response(serializer.data)
 
-
 class DeviceRegisterView(APIView):
     permission_classes = [IsAuthenticated, IsVerifiedProducer]
 
@@ -173,18 +172,16 @@ class MarketListingsView(APIView):
         serializer = EnergyListingSerializer(qs, many=True)
         return Response(serializer.data)
 
-
 class ProducerListingsView(APIView):
     permission_classes = [IsAuthenticated, IsProducer]
 
     def get(self, request):
-        qs     = EnergyListing.objects.filter(producer=request.user)
+        qs = EnergyListing.objects.all()
         status_filter = request.query_params.get("status")
         if status_filter:
             qs = qs.filter(status=status_filter)
         serializer = EnergyListingSerializer(qs, many=True)
         return Response(serializer.data)
-
 
 class ListingCreateView(APIView):
     permission_classes = [IsAuthenticated, IsVerifiedProducer, IsSystemActive]
@@ -360,21 +357,17 @@ class ConsumerBidsView(APIView):
         serializer = BidDetailSerializer(bids, many=True)
         return Response(serializer.data)
 
-
 class ProducerBidsView(APIView):
     permission_classes = [IsAuthenticated, IsProducer]
 
     def get(self, request):
-        bids = Bid.objects.filter(
-            listing__producer=request.user,
-            listing__active=True,
-        )
+        # Get all bids on listings owned by this producer
+        bids = Bid.objects.filter(listing__producer=request.user)
         status_filter = request.query_params.get("status")
         if status_filter:
             bids = bids.filter(status=status_filter)
         serializer = BidDetailSerializer(bids, many=True)
         return Response(serializer.data)
-
 
 class BidRespondView(APIView):
     permission_classes = [IsAuthenticated, IsVerifiedProducer, IsSystemActive]
@@ -441,18 +434,21 @@ class TradeListView(APIView):
 
     def get(self, request):
         user = request.user
-        txns = Transaction.objects.filter(
-            buyer=user
-        ) | Transaction.objects.filter(seller=user)
 
-        # Admin sees all
         if user.role == "admin" or user.is_staff:
             txns = Transaction.objects.all()
+        elif user.role == "producer":
+            txns = Transaction.objects.filter(seller=user)
+        elif user.role == "consumer":
+            txns = Transaction.objects.filter(buyer=user)
+        else:
+            txns = Transaction.objects.filter(
+                seller=user
+            ) | Transaction.objects.filter(buyer=user)
 
         txns = txns.order_by("-timestamp")
         serializer = TransactionSerializer(txns, many=True)
         return Response(serializer.data)
-
 
 class TradeDetailView(APIView):
     permission_classes = [IsAuthenticated]
@@ -738,26 +734,44 @@ class MarketStatsView(APIView):
                 status=status.HTTP_502_BAD_GATEWAY,
             )
 
-
 class MarketPriceView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         listing_id = request.query_params.get("listing_id")
+
         if not listing_id:
             return Response(
                 {"error": "listing_id required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
         try:
+            listing = EnergyListing.objects.get(
+                listing_id=listing_id
+            )
+
+            if not listing.active:
+                return Response(
+                    {"error": "Listing is not active."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             data = get_dynamic_price(int(listing_id))
+
             return Response(data)
+
+        except EnergyListing.DoesNotExist:
+            return Response(
+                {"error": "Listing not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
         except Exception as exc:
             return Response(
                 {"error": str(exc)},
                 status=status.HTTP_502_BAD_GATEWAY,
             )
-
 
 class MarketHistoryView(APIView):
     permission_classes = [IsAuthenticated]
@@ -804,9 +818,9 @@ class ProducerStatsView(APIView):
     permission_classes = [IsAuthenticated, IsProducer]
 
     def get(self, request):
-        user      = request.user
-        listings  = EnergyListing.objects.filter(producer=user)
-        sales     = Transaction.objects.filter(seller=user)
+        user     = request.user
+        listings = EnergyListing.objects.filter(producer=user)
+        sales    = Transaction.objects.filter(seller=user)
 
         total_volume = sum(int(t.total_cost) for t in sales)
         total_energy = sum(t.energy_amount for t in sales)

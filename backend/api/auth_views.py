@@ -334,3 +334,11 @@ class AdminResetPasswordView(APIView):
         )
 
         return Response({"message": "Password reset successfully."})
+
+class UnlinkWalletView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        request.user.wallet_address = None
+        request.user.save()
+        return Response({"message": "Wallet unlinked."})

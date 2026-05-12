@@ -5,24 +5,39 @@ describe("DECT System", function () {
 
   // ── Fixture ───────────────────────────────────────────────────────────────
   async function deployFixture() {
-    const [owner, seller, buyer, other, feeCollector] = await ethers.getSigners();
+  const [owner, seller, buyer, other, feeCollector] =
+    await ethers.getSigners();
 
-    // Deploy DECT_Credit
-    const DECT_Credit = await ethers.getContractFactory("DECT_Credit");
-    await credit.deployed(); // v5 uses .deployed()
-    // Deploy EnergyMarket
-    const EnergyMarket = await ethers.getContractFactory("EnergyMarket");
-    const market       = await EnergyMarket.deploy(
-      credit.address,
-      feeCollector.address
-    );
+  // Deploy DECT_Credit
+  const DECT_Credit = await ethers.getContractFactory("DECT_Credit");
 
-    // Authorize market to mint TKN
-    await credit.addMinter( market.address );
+  const credit = await DECT_Credit.deploy();
 
-    return { market, credit, owner, seller, buyer, other, feeCollector };
-  }
+  await credit.deployed();
 
+  // Deploy EnergyMarket
+  const EnergyMarket = await ethers.getContractFactory("EnergyMarket");
+
+  const market = await EnergyMarket.deploy(
+    credit.address,
+    feeCollector.address
+  );
+
+  await market.deployed();
+
+  // Authorize market to mint TKN
+  await credit.addMinter(market.address);
+
+  return {
+    market,
+    credit,
+    owner,
+    seller,
+    buyer,
+    other,
+    feeCollector,
+  };
+}
   // ── Helpers ───────────────────────────────────────────────────────────────
   const ENERGY      = 100n;
   const BASE_PRICE  = ethers.utils.parseEther("0.001");

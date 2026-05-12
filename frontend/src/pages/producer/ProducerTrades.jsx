@@ -13,11 +13,15 @@ export default function ProducerTrades() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    producerAPI.getTrades()
-      .then(r => setTrades(r.data))
-      .catch(() => showToast("Failed to load trades.", "error"))
-      .finally(() => setLoading(false));
-  }, []);
+  setLoading(true);
+  producerAPI.getTrades()
+    .then(r => setTrades(r.data))
+    .catch(err => {
+      showToast("Failed to load trades.", "error");
+      console.error(err);
+    })
+    .finally(() => setLoading(false));
+}, []);
 
   return (
     <div className="page">

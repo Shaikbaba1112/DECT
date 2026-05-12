@@ -3,30 +3,40 @@ import { NavLink } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import "./Sidebar.css";
 
+
+
+
+
 const PRODUCER_LINKS = [
-  { to: "/producer",           label: "Dashboard" },
-  { to: "/producer/listings",  label: "My Listings" },
-  { to: "/producer/bids",      label: "Bid Inbox" },
-  { to: "/producer/devices",   label: "Devices" },
-  { to: "/producer/trades",    label: "Trade History" },
+  { to: "/producer",            label: "Dashboard" },
+  { to: "/producer/listings",   label: "My Listings" },
+  { to: "/producer/bids",       label: "Bid Inbox" },
+  { to: "/producer/devices",    label: "Devices" },
+  { to: "/producer/trades",     label: "Trade History" },
+  { to: "/producer/analytics",  label: "Analytics" },   // ← add
 ];
 
 const CONSUMER_LINKS = [
-  { to: "/consumer",           label: "Dashboard" },
-  { to: "/consumer/market",    label: "Marketplace" },
-  { to: "/consumer/bids",      label: "My Bids" },
-  { to: "/consumer/trades",    label: "Trades" },
+  { to: "/consumer",            label: "Dashboard" },
+  { to: "/consumer/market",     label: "Marketplace" },
+  { to: "/consumer/bids",       label: "My Bids" },
+  { to: "/consumer/trades",     label: "Trades" },
+  { to: "/consumer/analytics",  label: "Analytics" },   // ← add
 ];
 
 const ADMIN_LINKS = [
-  { to: "/admin",              label: "Dashboard" },
-  { to: "/admin/users",        label: "Users" },
-  { to: "/admin/transactions", label: "Transactions" },
-  { to: "/admin/fraud",        label: "Fraud" },
-  { to: "/admin/approvals",    label: "Approvals" },
-  { to: "/admin/audit-logs",   label: "Audit Logs" },
-  { to: "/admin/settings",     label: "Settings" },
+  { to: "/admin",               label: "Dashboard" },
+  { to: "/admin/users",         label: "Users" },
+  { to: "/admin/transactions",  label: "Transactions" },
+  { to: "/admin/fraud",         label: "Fraud" },
+  { to: "/admin/approvals",     label: "Approvals" },
+  { to: "/admin/analytics",     label: "Analytics" },   // ← add
+  { to: "/admin/audit-logs",    label: "Audit Logs" },
+  { to: "/admin/settings",      label: "Settings" },
 ];
+
+
+
 
 const SHARED_LINKS = [
   { to: "/wallet",              label: "Wallet" },

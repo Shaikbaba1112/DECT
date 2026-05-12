@@ -111,6 +111,7 @@ export const authAPI = {
     wallet_address: addr,
   }),
   refreshToken:   (refresh)=> api.post("/auth/token/refresh/", { refresh }),
+  unlinkWallet: () => api.post("/auth/unlink-wallet/"),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -155,7 +156,8 @@ export const producerAPI = {
   getStats:       ()       => api.get("/api/producer/stats/"),
 
   // Trades
-  getTrades:      ()       => api.get("/api/trades/"),
+ 
+  getTrades:      ()       => api.get("/api/trades/"),  
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

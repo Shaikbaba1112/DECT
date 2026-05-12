@@ -46,6 +46,13 @@ const ProfilePage        = lazy(() => import("./pages/settings/ProfilePage"));
 const AutoTradePage      = lazy(() => import("./pages/settings/AutoTradePage"));
 const AlertsPage         = lazy(() => import("./pages/settings/AlertsPage"));
 
+
+// Add lazy imports
+const ProducerCharts = lazy(() => import("./pages/producer/ProducerCharts"));
+const ConsumerCharts = lazy(() => import("./pages/consumer/ConsumerCharts"));
+const AdminCharts    = lazy(() => import("./pages/admin/AdminCharts"));
+
+
 // Loading fallback
 const PageLoader = () => (
   <div className="flex items-center justify-center h-64">
@@ -85,6 +92,39 @@ export default function App() {
           <Routes>
 
             {/* ── Public Auth Routes ──────────────────────────────── */}
+
+            <Route
+                path="/producer/analytics"
+                element={
+                  <PrivateRoute role="producer">
+                    <Suspense fallback={<PageLoader />}>
+                      <ProducerCharts />
+                    </Suspense>
+                  </PrivateRoute>
+                }
+              />
+
+              <Route
+                path="/consumer/analytics"
+                element={
+                  <PrivateRoute role="consumer">
+                    <Suspense fallback={<PageLoader />}>
+                      <ConsumerCharts />
+                    </Suspense>
+                  </PrivateRoute>
+                }
+              />
+
+            <Route
+              path="/admin/analytics"
+              element={
+                <PrivateRoute role="admin">
+                  <Suspense fallback={<PageLoader />}>
+                    <AdminCharts />
+                  </Suspense>
+                </PrivateRoute>
+              }
+            />
             <Route element={<AuthLayout />}>
               <Route
                 path="/login"

@@ -29,23 +29,31 @@ export default function ProducerDashboard() {
   const [loading,     setLoading]     = useState(true);
   const [withdrawing, setWithdrawing] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  // Replace the load function:
+const load = useCallback(async () => {
+  setLoading(true);
+  try {
+    const [statsRes, listingsRes] = await Promise.all([
+      producerAPI.getStats(),
+      producerAPI.getListings({ status: "active" }),
+    ]);
+    setStats(statsRes.data);
+    setListings(listingsRes.data.slice(0, 5));
+
+    // Market stats — may fail if blockchain not running
     try {
-      const [statsRes, listingsRes, mktRes] = await Promise.all([
-        producerAPI.getStats(),
-        producerAPI.getListings({ status: "active" }),
-        marketAPI.getStats(),
-      ]);
-      setStats(statsRes.data);
-      setListings(listingsRes.data.slice(0, 5));
+      const mktRes = await marketAPI.getStats();
       setMultiplier(mktRes.data);
     } catch {
-      showToast("Failed to load dashboard.", "error");
-    } finally {
-      setLoading(false);
+      setMultiplier(null);
     }
-  }, []);
+  } catch (err) {
+    showToast("Failed to load dashboard.", "error");
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   useEffect(() => { load(); }, [load]);
 

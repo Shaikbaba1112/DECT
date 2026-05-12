@@ -186,22 +186,26 @@ contract EnergyMarket {
         return ratio;
     }
 
-    function getDynamicPrice(uint256 _listingId)
-        public
-        view
-        returns (
-            uint256 dynamicPricePerUnit,
-            uint256 totalCost,
-            uint256 multiplier
-        )
-    {
-        EnergyListing storage l = listings[_listingId];
-        require(l.active, "Listing not active");
-        multiplier          = getMultiplier();
-        dynamicPricePerUnit = (l.basePricePerUnit * multiplier) / BASE_MULTIPLIER;
-        totalCost           = dynamicPricePerUnit * l.energyAmount;
-    }
+  function getDynamicPrice(uint256 _listingId)
+    public
+    view
+    returns (
+        uint256 dynamicPricePerUnit,
+        uint256 totalCost,
+        uint256 multiplier
+    )
+{
+    EnergyListing storage l = listings[_listingId];
 
+    require(l.active, "Listing not active");
+
+    multiplier = getMultiplier();
+
+    dynamicPricePerUnit =
+        (l.basePricePerUnit * multiplier) / BASE_MULTIPLIER;
+
+    totalCost = dynamicPricePerUnit * l.energyAmount;
+}
     // ─────────────────────────────────────────────
     //  Fee Calculation
     // ─────────────────────────────────────────────

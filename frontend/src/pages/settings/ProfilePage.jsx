@@ -4,12 +4,7 @@ import { useWallet } from "../../hooks/useWallet";
 import { authAPI }   from "../../services/api";
 import useToast      from "../../hooks/useToast";
 import PageHeader    from "../../components/PageHeader";
-import {
-  UserCircleIcon,
-  WalletIcon,
-  KeyIcon,
-  CameraIcon,
-} from "@heroicons/react/24/outline";
+
 
 export default function ProfilePage() {
   const { user, updateUser, refreshProfile } = useAuth();
@@ -22,33 +17,32 @@ export default function ProfilePage() {
     email:    user?.email    || "",
   });
   const [passwordForm, setPasswordForm] = useState({
-    old_password:     "",
-    new_password:     "",
-    confirm_password: "",
+    old_password: "", new_password: "", confirm_password: "",
   });
   const [savingProfile,  setSavingProfile]  = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
   const [linkingWallet,  setLinkingWallet]  = useState(false);
-  const [errors, setErrors] = useState({});
+  const [unlinking,      setUnlinking]      = useState(false);
+  const [errors,         setErrors]         = useState({});
 
-  // ── Profile update ──────────────────────────────────────────────────────
+  // ── Profile update ──────────────────────────────────────────────────
   const handleProfileSave = async (e) => {
     e.preventDefault();
     setSavingProfile(true);
     try {
-      const res = await authAPI.updateProfile(profileForm);
-      updateUser(res.data.user || profileForm);
+      await authAPI.updateProfile(profileForm);
+      updateUser(profileForm);
       showToast("Profile updated.", "success");
+      setErrors({});
     } catch (err) {
-      const data = err.response?.data || {};
-      setErrors(data);
+      setErrors(err.response?.data || {});
       showToast("Failed to update profile.", "error");
     } finally {
       setSavingProfile(false);
     }
   };
 
-  // ── Password change ─────────────────────────────────────────────────────
+  // ── Password change ─────────────────────────────────────────────────
   const handlePasswordSave = async (e) => {
     e.preventDefault();
     if (passwordForm.new_password !== passwordForm.confirm_password) {
@@ -59,105 +53,95 @@ export default function ProfilePage() {
     try {
       await promiseToast(authAPI.changePassword(passwordForm), {
         loading: "Changing password…",
-        success: "Password changed successfully.",
+        success: "Password changed.",
         error:   "Failed to change password.",
       });
-      setPasswordForm({
-        old_password: "", new_password: "", confirm_password: "",
-      });
+      setPasswordForm({ old_password: "", new_password: "", confirm_password: "" });
       setErrors({});
     } catch (err) {
-      const data = err.response?.data || {};
-      setErrors(data);
+      setErrors(err.response?.data || {});
     } finally {
       setSavingPassword(false);
     }
   };
 
-  // ── Wallet link ─────────────────────────────────────────────────────────
- // Replace handleLinkWallet with this:
-const handleLinkWallet = async () => {
-  setLinkingWallet(true);
-  try {
-    // Step 1 — get wallet address
-    let address = walletAddress;
-    if (!isConnected) {
-      address = await connect();
+  // ── Link wallet ─────────────────────────────────────────────────────
+  const handleLinkWallet = async () => {
+    setLinkingWallet(true);
+    try {
+      let address = walletAddress;
+      if (!isConnected) {
+        address = await connect();
+      }
+      if (!address) {
+        showToast("No wallet address found.", "error");
+        return;
+      }
+      await authAPI.connectWallet(address);
+      showToast("Wallet linked successfully!", "success");
+      await refreshProfile();
+    } catch (err) {
+      const msg =
+        err.response?.data?.wallet_address?.[0] ||
+        err.response?.data?.error ||
+        err.message ||
+        "Failed to link wallet.";
+      showToast(msg, "error");
+    } finally {
+      setLinkingWallet(false);
     }
-    if (!address) {
-      showToast("No wallet address found.", "error");
-      return;
-    }
+  };
 
-    // Step 2 — link to account
-    await authAPI.connectWallet(address);
-    showToast("Wallet linked!", "success");
+  // ── Unlink wallet ───────────────────────────────────────────────────
+  const handleUnlinkWallet = async () => {
+    setUnlinking(true);
+    try {
+      await promiseToast(authAPI.unlinkWallet(), {
+        loading: "Unlinking wallet…",
+        success: "Wallet unlinked.",
+        error:   "Failed to unlink.",
+      });
+      await refreshProfile();
+    } catch { /* handled */ }
+    finally { setUnlinking(false); }
+  };
 
-    // Step 3 — refresh profile to update UI
-    await refreshProfile();
-  } catch (err) {
-    const msg =
-      err.response?.data?.wallet_address?.[0] ||
-      err.response?.data?.error ||
-      err.message ||
-      "Failed to link wallet.";
-    showToast(msg, "error");
-  } finally {
-    setLinkingWallet(false);
-  }
-};
-
-
-  const roleBadgeColor = {
-    admin:    "text-warning border-warning/40 bg-warning/10",
-    producer: "text-accent  border-accent/40  bg-accent/10",
-    consumer: "text-blue-400 border-blue-400/40 bg-blue-400/10",
-    both:     "text-accent  border-accent/40  bg-accent/10",
-  }[user?.role] || "text-muted border-border";
+  const roleBadgeClass = {
+    admin:    "badge badge-admin",
+    producer: "badge badge-active",
+    consumer: "badge badge-blue",
+    both:     "badge badge-active",
+  }[user?.role] || "badge badge-sold";
 
   return (
     <div className="page">
-      <PageHeader
-        title="Profile"
-        subtitle="Manage your account details"
-      />
+      <PageHeader title="Profile" subtitle="Manage your account details" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="profile-layout">
 
-        {/* Left — avatar + summary */}
-        <div className="space-y-4">
-          <div className="dect-card flex flex-col items-center
-                          text-center gap-4 py-8">
-            {/* Avatar */}
-            <div className="relative">
-              <div className="w-20 h-20 rounded-full
-                              bg-accent/20 border-2 border-accent/40
-                              flex items-center justify-center">
-                {user?.profile_avatar ? (
-                  <img
-                    src={user.profile_avatar}
-                    alt="avatar"
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                ) : (
-                  <span className="font-mono text-3xl font-bold text-accent">
-                    {user?.username?.[0]?.toUpperCase()}
-                  </span>
-                )}
+        {/* Left sidebar */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+
+          {/* Avatar + summary */}
+          <div className="dect-card profile-avatar-section">
+            <div className="profile-avatar-wrap">
+              <div className="profile-avatar">
+                {user?.profile_avatar
+                  ? <img src={user.profile_avatar} alt="avatar" />
+                  : user?.username?.[0]?.toUpperCase()}
               </div>
               <button
+                className="profile-avatar-btn"
                 onClick={() => fileRef.current?.click()}
-                className="absolute bottom-0 right-0 w-6 h-6
-                           bg-accent rounded-full flex items-center
-                           justify-center hover:bg-accent/80 transition-colors"
+                title="Change avatar"
               >
-                <CameraIcon className="w-3 h-3 text-bg" />
+                📷
               </button>
               <input
                 ref={fileRef}
                 type="file"
                 accept="image/*"
-                className="hidden"
+                style={{ display: "none" }}
                 onChange={async (e) => {
                   const file = e.target.files[0];
                   if (!file) return;
@@ -168,40 +152,24 @@ const handleLinkWallet = async () => {
                     await refreshProfile();
                     showToast("Avatar updated.", "success");
                   } catch {
-                    showToast("Failed to upload avatar.", "error");
+                    showToast("Failed to upload.", "error");
                   }
                 }}
               />
             </div>
 
-            <div>
-              <p className="font-mono text-lg font-bold text-textPrimary">
-                {user?.username}
-              </p>
-              <p className="font-mono text-xs text-muted">{user?.email}</p>
-            </div>
+            <p className="profile-username">{user?.username}</p>
+            <p className="profile-email">{user?.email}</p>
 
-            {/* Role badge */}
-            <span className={`font-mono text-xs px-3 py-1 rounded
-                              border uppercase tracking-widest
-                              ${roleBadgeColor}`}>
-              {user?.role}
-            </span>
+            <span className={roleBadgeClass}>{user?.role}</span>
 
-            {/* Verified status */}
             {user?.role === "producer" && (
-              <div className={`font-mono text-xs px-3 py-1.5 rounded border w-full
-                               ${user?.is_verified
-                                 ? "text-accent border-accent/30 bg-accent/10"
-                                 : "text-warning border-warning/30 bg-warning/10"}`}>
-                {user?.is_verified
-                  ? "✓ Verified Producer"
-                  : "⏳ Pending Verification"}
+              <div className={`profile-verified ${user?.is_verified ? "yes" : "pending"}`}>
+                {user?.is_verified ? "✓ Verified Producer" : "⏳ Pending Verification"}
               </div>
             )}
 
-            {/* Account created */}
-            <p className="font-mono text-[10px] text-muted/50">
+            <p className="profile-member-since">
               Member since{" "}
               {user?.created_at
                 ? new Date(user.created_at).toLocaleDateString()
@@ -209,36 +177,50 @@ const handleLinkWallet = async () => {
             </p>
           </div>
 
-          {/* Wallet link card */}
+          {/* Wallet card */}
           <div className="dect-card">
-            <p className="section-label">
-              <WalletIcon className="w-3.5 h-3.5 inline mr-1.5 mb-0.5" />
-              Linked Wallet
-            </p>
+            <p className="section-label">Linked Wallet</p>
+
             {user?.wallet_address ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-accent
-                                   shadow-[0_0_5px_#00ff88]" />
-                  <span className="font-mono text-xs text-accent">
-                    Linked
-                  </span>
+              <div className="wallet-link-status">
+                <div className="wallet-link-connected">
+                  <span className="wallet-link-dot" />
+                  <span className="wallet-link-connected-label">Connected</span>
                 </div>
-                <p className="font-mono text-xs text-muted break-all">
-                  {user.wallet_address}
-                </p>
+                <p className="wallet-link-addr">{user.wallet_address}</p>
+
+                {/* Wallet actions */}
+                <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem" }}>
+                  <button
+                    onClick={handleLinkWallet}
+                    disabled={linkingWallet}
+                    className="btn-ghost"
+                    style={{ flex: 1, fontSize: "0.72rem", padding: "0.5rem" }}
+                  >
+                    {linkingWallet ? "Switching…" : "Switch Wallet"}
+                  </button>
+                  <button
+                    onClick={handleUnlinkWallet}
+                    disabled={unlinking}
+                    className="btn-danger"
+                    style={{ flex: 1, fontSize: "0.72rem", padding: "0.5rem" }}
+                  >
+                    {unlinking ? "Unlinking…" : "Unlink"}
+                  </button>
+                </div>
               </div>
             ) : (
-              <div className="space-y-3">
-                <p className="font-sans text-xs text-muted">
+              <div className="wallet-link-status">
+                <p className="wallet-link-hint">
                   Link your MetaMask wallet to enable blockchain trading.
                 </p>
                 <button
                   onClick={handleLinkWallet}
                   disabled={linkingWallet}
-                  className="btn-secondary w-full text-xs"
+                  className="btn-secondary w-full"
+                  style={{ marginTop: "0.75rem", fontSize: "0.75rem" }}
                 >
-                  {linkingWallet ? "Linking…" : "Link MetaMask Wallet"}
+                  {linkingWallet ? "Linking…" : "⬡ Link MetaMask Wallet"}
                 </button>
               </div>
             )}
@@ -246,36 +228,30 @@ const handleLinkWallet = async () => {
         </div>
 
         {/* Right — forms */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="profile-forms">
 
-          {/* Profile form */}
+          {/* Account details */}
           <div className="dect-card">
-            <p className="section-label">
-              <UserCircleIcon className="w-3.5 h-3.5 inline mr-1.5 mb-0.5" />
-              Account Details
-            </p>
-            <form onSubmit={handleProfileSave} className="space-y-4">
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <p className="section-label">Account Details</p>
+            <form onSubmit={handleProfileSave}>
+              <div className="profile-form-grid" style={{ marginBottom: "1rem" }}>
                 <div>
                   <label className="dect-label">Username</label>
                   <input
-                    className={`dect-input ${errors.username ? "border-danger" : ""}`}
+                    className={`dect-input ${errors.username ? "error" : ""}`}
                     value={profileForm.username}
                     onChange={e => setProfileForm(f => ({
                       ...f, username: e.target.value
                     }))}
                   />
                   {errors.username && (
-                    <p className="font-mono text-xs text-danger mt-1">
-                      {errors.username}
-                    </p>
+                    <p className="field-error">{errors.username}</p>
                   )}
                 </div>
                 <div>
                   <label className="dect-label">Email</label>
                   <input
-                    className={`dect-input ${errors.email ? "border-danger" : ""}`}
+                    className={`dect-input ${errors.email ? "error" : ""}`}
                     type="email"
                     value={profileForm.email}
                     onChange={e => setProfileForm(f => ({
@@ -283,30 +259,27 @@ const handleLinkWallet = async () => {
                     }))}
                   />
                   {errors.email && (
-                    <p className="font-mono text-xs text-danger mt-1">
-                      {errors.email}
-                    </p>
+                    <p className="field-error">{errors.email}</p>
                   )}
                 </div>
-              </div>
-
-              {/* Read-only fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="dect-label">Role</label>
-                  <div className="dect-input bg-bg/50 text-muted capitalize">
+                  <div className="dect-input"
+                       style={{ background: "rgba(255,255,255,0.02)",
+                                color: "var(--muted)", textTransform: "capitalize" }}>
                     {user?.role}
                   </div>
                 </div>
                 <div>
                   <label className="dect-label">Account ID</label>
-                  <div className="dect-input bg-bg/50 text-muted
-                                  font-mono text-xs truncate">
-                    {user?.id}
+                  <div className="dect-input"
+                       style={{ background: "rgba(255,255,255,0.02)",
+                                color: "var(--muted)", fontSize: "0.7rem",
+                                overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {user?.id?.slice(0, 18)}…
                   </div>
                 </div>
               </div>
-
               <button
                 type="submit"
                 disabled={savingProfile}
@@ -317,70 +290,59 @@ const handleLinkWallet = async () => {
             </form>
           </div>
 
-          {/* Password form */}
+          {/* Change password */}
           <div className="dect-card">
-            <p className="section-label">
-              <KeyIcon className="w-3.5 h-3.5 inline mr-1.5 mb-0.5" />
-              Change Password
-            </p>
-            <form onSubmit={handlePasswordSave} className="space-y-4">
-
-              <div>
-                <label className="dect-label">Current Password</label>
-                <input
-                  className={`dect-input ${errors.error ? "border-danger" : ""}`}
-                  type="password"
-                  placeholder="••••••••"
-                  value={passwordForm.old_password}
-                  onChange={e => setPasswordForm(f => ({
-                    ...f, old_password: e.target.value
-                  }))}
-                />
-                {errors.error && (
-                  <p className="font-mono text-xs text-danger mt-1">
-                    {errors.error}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <p className="section-label">Change Password</p>
+            <form onSubmit={handlePasswordSave}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1rem" }}>
                 <div>
-                  <label className="dect-label">New Password</label>
+                  <label className="dect-label">Current Password</label>
                   <input
-                    className={`dect-input ${errors.new_password ? "border-danger" : ""}`}
+                    className={`dect-input ${errors.error ? "error" : ""}`}
                     type="password"
-                    placeholder="Min. 8 characters"
-                    value={passwordForm.new_password}
+                    placeholder="••••••••"
+                    value={passwordForm.old_password}
                     onChange={e => setPasswordForm(f => ({
-                      ...f, new_password: e.target.value
+                      ...f, old_password: e.target.value
                     }))}
                   />
-                  {errors.new_password && (
-                    <p className="font-mono text-xs text-danger mt-1">
-                      {errors.new_password}
-                    </p>
+                  {errors.error && (
+                    <p className="field-error">{errors.error}</p>
                   )}
                 </div>
-                <div>
-                  <label className="dect-label">Confirm New Password</label>
-                  <input
-                    className={`dect-input
-                      ${errors.confirm_password ? "border-danger" : ""}`}
-                    type="password"
-                    placeholder="Repeat password"
-                    value={passwordForm.confirm_password}
-                    onChange={e => setPasswordForm(f => ({
-                      ...f, confirm_password: e.target.value
-                    }))}
-                  />
-                  {errors.confirm_password && (
-                    <p className="font-mono text-xs text-danger mt-1">
-                      {errors.confirm_password}
-                    </p>
-                  )}
+                <div className="profile-form-grid">
+                  <div>
+                    <label className="dect-label">New Password</label>
+                    <input
+                      className={`dect-input ${errors.new_password ? "error" : ""}`}
+                      type="password"
+                      placeholder="Min. 8 characters"
+                      value={passwordForm.new_password}
+                      onChange={e => setPasswordForm(f => ({
+                        ...f, new_password: e.target.value
+                      }))}
+                    />
+                    {errors.new_password && (
+                      <p className="field-error">{errors.new_password}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="dect-label">Confirm New Password</label>
+                    <input
+                      className={`dect-input ${errors.confirm_password ? "error" : ""}`}
+                      type="password"
+                      placeholder="Repeat password"
+                      value={passwordForm.confirm_password}
+                      onChange={e => setPasswordForm(f => ({
+                        ...f, confirm_password: e.target.value
+                      }))}
+                    />
+                    {errors.confirm_password && (
+                      <p className="field-error">{errors.confirm_password}</p>
+                    )}
+                  </div>
                 </div>
               </div>
-
               <button
                 type="submit"
                 disabled={savingPassword}

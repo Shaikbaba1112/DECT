@@ -20,17 +20,19 @@ export default function ProducerBids() {
   const [counterPrice, setCounterPrice] = useState("");
 
   const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = filter !== "all" ? { status: filter } : {};
-      const res    = await producerAPI.getBids(params);
-      setBids(res.data);
-    } catch {
-      showToast("Failed to load bids.", "error");
-    } finally {
-      setLoading(false);
-    }
-  }, [filter]);
+  setLoading(true);
+  try {
+    const params = filter !== "all" ? { status: filter } : {};
+    const res    = await producerAPI.getBids(params);
+    setBids(res.data);
+  } catch (err) {
+    showToast("Failed to load bids.", "error");
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+}, [filter]);
+
 
   useEffect(() => { load(); }, [load]);
 
