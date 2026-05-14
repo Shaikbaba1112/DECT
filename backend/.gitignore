@@ -6,10 +6,10 @@ __pycache__/
 # Ignore the .env file containing sensitive information
 .env
 db.sqlite3
-migrations/ 
+
+
 *.log
 *.pot
 *.pyc
 *.pyo
 *.db
-*.sqlite3
