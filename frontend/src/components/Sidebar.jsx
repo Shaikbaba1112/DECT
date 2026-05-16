@@ -25,14 +25,15 @@ const CONSUMER_LINKS = [
 ];
 
 const ADMIN_LINKS = [
-  { to: "/admin",               label: "Dashboard" },
-  { to: "/admin/users",         label: "Users" },
-  { to: "/admin/transactions",  label: "Transactions" },
-  { to: "/admin/fraud",         label: "Fraud" },
-  { to: "/admin/approvals",     label: "Approvals" },
-  { to: "/admin/analytics",     label: "Analytics" },   // ← add
-  { to: "/admin/audit-logs",    label: "Audit Logs" },
-  { to: "/admin/settings",      label: "Settings" },
+  { to: "/admin",                   label: "Dashboard" },
+  { to: "/admin/users",             label: "Users" },
+  { to: "/admin/transactions",      label: "Transactions" },
+  { to: "/admin/fraud",             label: "Fraud Detection" },
+  { to: "/admin/approvals",         label: "Producer Approvals" },
+  { to: "/admin/listing-approvals", label: "Listing Approvals" },  // ← NEW
+  { to: "/admin/analytics",         label: "Analytics" },
+  { to: "/admin/audit-logs",        label: "Audit Logs" },
+  { to: "/admin/settings",          label: "Settings" },
 ];
 
 

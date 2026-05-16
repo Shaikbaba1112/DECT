@@ -52,7 +52,9 @@ const ProducerCharts = lazy(() => import("./pages/producer/ProducerCharts"));
 const ConsumerCharts = lazy(() => import("./pages/consumer/ConsumerCharts"));
 const AdminCharts    = lazy(() => import("./pages/admin/AdminCharts"));
 
-
+const AdminListingApprovals = lazy(() =>
+  import("./pages/admin/AdminListingApprovals")
+);
 // Loading fallback
 const PageLoader = () => (
   <div className="flex items-center justify-center h-64">
@@ -110,6 +112,16 @@ export default function App() {
                   <PrivateRoute role="consumer">
                     <Suspense fallback={<PageLoader />}>
                       <ConsumerCharts />
+                    </Suspense>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/admin/listing-approvals"
+                element={
+                  <PrivateRoute role="admin">
+                    <Suspense fallback={<PageLoader />}>
+                      <AdminListingApprovals />
                     </Suspense>
                   </PrivateRoute>
                 }

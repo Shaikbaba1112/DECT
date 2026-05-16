@@ -247,6 +247,11 @@ export const adminAPI = {
   updatePricingConfig:(data)=> api.patch(
     "/api/admin-api/pricing-config/", data
   ),
+
+
+  getListingApprovals:  ()          => api.get("/api/admin-api/listing-approvals/"),
+  reviewListing:        (id, data)  => api.post(`/api/admin-api/listing-approvals/${id}/review/`, data),
+  getListingStats:      ()          => api.get("/api/admin-api/listing-stats/"),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -256,3 +261,7 @@ export const adminAPI = {
 export const broadcastAPI = {
   getActive: () => api.get("/api/broadcasts/active/"),
 };
+
+
+
+

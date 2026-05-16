@@ -250,11 +250,25 @@ export default function ProducerListings() {
           </button>
         ))}
       </div>
-
+      // Add this notice inside the listings table after the filter tabs:
+    {listings.filter(l => l.status === "pending").length > 0 && (
+      <div className="pending-notice">
+        <span>⏳</span>
+        <div>
+          <p className="pending-notice-title">
+            {listings.filter(l => l.status === "pending").length} listing(s) awaiting admin approval
+          </p>
+          <p className="pending-notice-sub">
+            Your listings will go live on the marketplace once an admin approves them.
+            This usually takes a few minutes.
+          </p>
+        </div>
+      </div>
+    )}
       {/* Listings table */}
       {loading ? (
         <LoadingSpinner text="LOADING LISTINGS…" />
-      ) : listings.length === 0 ? (
+      ) : listings.length === 0? (
         <EmptyState
           icon="📋"
           title="No listings found"
