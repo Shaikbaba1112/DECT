@@ -82,19 +82,15 @@ class EnergyDevice(models.Model):
 # ─────────────────────────────────────────────────────────────────────────────
 #  Energy Listing
 # ─────────────────────────────────────────────────────────────────────────────
-
 class EnergyListing(models.Model):
-    PRICE_TYPE_CHOICES = [
-        ("fixed",   "Fixed"),
-        ("dynamic", "Dynamic"),
-    ]
-
     STATUS_CHOICES = [
+        ("pending",   "Pending Approval"),   # ← ADD THIS
         ("active",    "Active"),
         ("sold",      "Sold"),
         ("expired",   "Expired"),
         ("cancelled", "Cancelled"),
         ("paused",    "Paused"),
+        ("rejected",  "Rejected"),           # ← ADD THIS
     ]
 
     listing_id          = models.PositiveIntegerField(unique=True)
@@ -109,16 +105,22 @@ class EnergyListing(models.Model):
     energy_amount       = models.PositiveBigIntegerField()
     base_price_per_unit = models.CharField(max_length=78)
     price_per_unit      = models.CharField(max_length=78)
-    price_type          = models.CharField(
-        max_length=10, choices=PRICE_TYPE_CHOICES, default="dynamic"
-    )
+    price_type          = models.CharField(max_length=10, default="dynamic")
     min_price_per_unit  = models.CharField(max_length=78, blank=True, null=True)
     status              = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default="active"
+        max_length=20, choices=STATUS_CHOICES, default="pending"  # ← default pending
     )
     device_type         = models.CharField(max_length=20, default="solar")
+    is_admin_verified   = models.BooleanField(default=False)       # ← NEW
+    admin_reviewed_by   = models.ForeignKey(                        # ← NEW
+        User, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="reviewed_listings"
+    )
+    rejection_reason    = models.CharField(                         # ← NEW
+        max_length=255, blank=True, null=True
+    )
     expires_at          = models.DateTimeField(null=True, blank=True)
-    active              = models.BooleanField(default=True)
+    active              = models.BooleanField(default=False)        # ← default False
     created_at          = models.DateTimeField(auto_now_add=True)
     updated_at          = models.DateTimeField(auto_now=True)
 
@@ -127,16 +129,7 @@ class EnergyListing(models.Model):
 
     def __str__(self):
         seller = self.producer.username if self.producer else "Unknown"
-        return f"Listing #{self.listing_id} — {seller}"
-
-    def save(self, *args, **kwargs):
-        # Auto-expire listings
-        if self.expires_at and timezone.now() > self.expires_at:
-            self.status = "expired"
-            self.active = False
-        super().save(*args, **kwargs)
-
-
+        return f"Listing #{self.listing_id} [{self.status}] — {seller}"
 # ─────────────────────────────────────────────────────────────────────────────
 #  Bid
 # ─────────────────────────────────────────────────────────────────────────────
