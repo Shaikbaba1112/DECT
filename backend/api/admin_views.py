@@ -606,3 +606,122 @@ class AdminPricingConfigView(APIView):
             )
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class UnlinkWalletView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        request.user.wallet_address = None
+        request.user.save()
+        return Response({"message": "Wallet unlinked."})
+
+
+
+class AdminListingApprovalsView(APIView):
+    """
+    GET  /api/admin-api/listing-approvals/
+    Returns all listings pending admin approval.
+    """
+    permission_classes = [IsAuthenticated, IsAdminRole]
+
+    def get(self, request):
+        qs = EnergyListing.objects.filter(status="pending")
+        serializer = EnergyListingSerializer(qs, many=True)
+        return Response({
+            "count":   qs.count(),
+            "results": serializer.data,
+        })
+
+
+class AdminListingReviewView(APIView):
+    """
+    POST /api/admin-api/listing-approvals/<id>/review/
+    Body: { "action": "approve" | "reject", "reason": "optional" }
+    """
+    permission_classes = [IsAuthenticated, IsAdminRole]
+
+    def post(self, request, pk):
+        try:
+            listing = EnergyListing.objects.get(pk=pk)
+        except EnergyListing.DoesNotExist:
+            return Response(
+                {"error": "Listing not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if listing.status != "pending":
+            return Response(
+                {"error": f"Listing is already {listing.status}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        action = request.data.get("action")
+        reason = request.data.get("reason", "")
+
+        if action not in ["approve", "reject"]:
+            return Response(
+                {"error": "action must be approve or reject."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if action == "approve":
+            listing.status           = "active"
+            listing.active           = True
+            listing.is_admin_verified = True
+            listing.admin_reviewed_by = request.user
+            listing.rejection_reason  = None
+            listing.save()
+
+            log_admin_action(
+                admin=request.user,
+                action="approve_listing",
+                target_model="EnergyListing",
+                target_id=listing.pk,
+                details={
+                    "listing_id": listing.listing_id,
+                    "producer":   listing.producer.username if listing.producer else "Unknown",
+                    "energy_wh":  listing.energy_amount,
+                },
+                ip=get_client_ip(request),
+            )
+
+            return Response({
+                "message": f"Listing #{listing.listing_id} approved and live.",
+                "listing": EnergyListingSerializer(listing).data,
+            })
+
+        else:  # reject
+            listing.status           = "rejected"
+            listing.active           = False
+            listing.is_admin_verified = False
+            listing.admin_reviewed_by = request.user
+            listing.rejection_reason  = reason
+            listing.save()
+
+            log_admin_action(
+                admin=request.user,
+                action="reject_listing",
+                target_model="EnergyListing",
+                target_id=listing.pk,
+                details={
+                    "listing_id": listing.listing_id,
+                    "reason":     reason,
+                },
+                ip=get_client_ip(request),
+            )
+
+            return Response({
+                "message": f"Listing #{listing.listing_id} rejected.",
+                "listing": EnergyListingSerializer(listing).data,
+            })
+
+
+class AdminListingStatsView(APIView):
+    """GET /api/admin-api/listing-stats/ — pending count for badge."""
+    permission_classes = [IsAuthenticated, IsAdminRole]
+
+    def get(self, request):
+        return Response({
+            "pending":  EnergyListing.objects.filter(status="pending").count(),
+            "active":   EnergyListing.objects.filter(status="active").count(),
+            "rejected": EnergyListing.objects.filter(status="rejected").count(),
+        })
