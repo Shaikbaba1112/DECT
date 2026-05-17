@@ -18,6 +18,11 @@ import DashboardLayout from "./layouts/DashboardLayout";
 // Auth pages
 import LoginPage    from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
+import IndexPage    from "./pages/IndexPage";
+import FeaturesPage from "./pages/FeaturesPage";
+import AboutPage    from "./pages/AboutPage";
+import PricingPage  from "./pages/PricingPage";
+import ContactPage  from "./pages/ContactPage";
 
 // Dashboard pages (lazy loaded)
 import { lazy, Suspense } from "react";
@@ -92,42 +97,14 @@ export default function App() {
           <Routes>
 
             {/* ── Public Auth Routes ──────────────────────────────── */}
-
-            <Route
-                path="/producer/analytics"
-                element={
-                  <PrivateRoute role="producer">
-                    <Suspense fallback={<PageLoader />}>
-                      <ProducerCharts />
-                    </Suspense>
-                  </PrivateRoute>
-                }
-              />
-
-              <Route
-                path="/consumer/analytics"
-                element={
-                  <PrivateRoute role="consumer">
-                    <Suspense fallback={<PageLoader />}>
-                      <ConsumerCharts />
-                    </Suspense>
-                  </PrivateRoute>
-                }
-              />
-
-            <Route
-              path="/admin/analytics"
-              element={
-                <PrivateRoute role="admin">
-                  <Suspense fallback={<PageLoader />}>
-                    <AdminCharts />
-                  </Suspense>
-                </PrivateRoute>
-              }
-            />
             <Route element={<AuthLayout />}>
+              <Route index element={<IndexPage />} />
+              <Route path="features" element={<FeaturesPage />} />
+              <Route path="about" element={<AboutPage />} />
+              <Route path="pricing" element={<PricingPage />} />
+              <Route path="contact" element={<ContactPage />} />
               <Route
-                path="/login"
+                path="login"
                 element={
                   <PublicRoute>
                     <LoginPage />
@@ -135,7 +112,7 @@ export default function App() {
                 }
               />
               <Route
-                path="/register"
+                path="register"
                 element={
                   <PublicRoute>
                     <RegisterPage />
@@ -203,6 +180,16 @@ export default function App() {
                   </PrivateRoute>
                 }
               />
+              <Route
+                path="/producer/analytics"
+                element={
+                  <PrivateRoute role="producer">
+                    <Suspense fallback={<PageLoader />}>
+                      <ProducerCharts />
+                    </Suspense>
+                  </PrivateRoute>
+                }
+              />
 
               {/* Consumer */}
               <Route
@@ -241,6 +228,16 @@ export default function App() {
                   <PrivateRoute role="consumer">
                     <Suspense fallback={<PageLoader />}>
                       <ConsumerTrades />
+                    </Suspense>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/consumer/analytics"
+                element={
+                  <PrivateRoute role="consumer">
+                    <Suspense fallback={<PageLoader />}>
+                      <ConsumerCharts />
                     </Suspense>
                   </PrivateRoute>
                 }
@@ -317,6 +314,16 @@ export default function App() {
                   </PrivateRoute>
                 }
               />
+              <Route
+                path="/admin/analytics"
+                element={
+                  <PrivateRoute role="admin">
+                    <Suspense fallback={<PageLoader />}>
+                      <AdminCharts />
+                    </Suspense>
+                  </PrivateRoute>
+                }
+              />
 
               {/* Shared Settings */}
               <Route
@@ -354,8 +361,7 @@ export default function App() {
             </Route>
 
             {/* ── Fallback ─────────────────────────────────────────── */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
 
           </Routes>
         </BrowserRouter>

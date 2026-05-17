@@ -1,6 +1,6 @@
 .dashboard-layout {
   min-height: 100vh;
-  background: var(--bg);
+  background: #f8fbff;
   display: flex;
   flex-direction: column;
 }
@@ -14,8 +14,17 @@
 .dashboard-main {
   flex: 1;
   overflow-y: auto;
-  transition: margin-left 0.3s ease;
+  transition: margin-left 0.3s ease, padding 0.3s ease;
+  padding: 2rem 2.25rem 3rem;
+  background: transparent;
 }
 
-.dashboard-main.sidebar-open  { margin-left: 220px; }
+.dashboard-main.sidebar-open  { margin-left: 240px; }
 .dashboard-main.sidebar-closed { margin-left: 0; }
+
+.dashboard-main .page {
+  background: #ffffff;
+  border-radius: 32px;
+  box-shadow: 0 24px 55px rgba(15, 23, 42, 0.08);
+  padding: 2rem;
+}
