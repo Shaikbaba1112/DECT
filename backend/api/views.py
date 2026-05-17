@@ -149,29 +149,28 @@ class DeviceDetailView(APIView):
 # ─────────────────────────────────────────────────────────────────────────────
 #  Listing Views
 # ─────────────────────────────────────────────────────────────────────────────
-
 class MarketListingsView(APIView):
-    """Public listing of all active listings."""
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        qs = EnergyListing.objects.filter(active=True, status="active")
+        qs = EnergyListing.objects.filter(
+            active=True,
+            status="active",
+            is_admin_verified=True,   # ← only verified listings
+        )
 
-        # Filters
         device_type = request.query_params.get("device_type")
         min_price   = request.query_params.get("min_price")
         max_price   = request.query_params.get("max_price")
 
-        if device_type:
-            qs = qs.filter(device_type=device_type)
-        if min_price:
-            qs = qs.filter(base_price_per_unit__gte=min_price)
-        if max_price:
-            qs = qs.filter(base_price_per_unit__lte=max_price)
+        if device_type: qs = qs.filter(device_type=device_type)
+        if min_price:   qs = qs.filter(base_price_per_unit__gte=min_price)
+        if max_price:   qs = qs.filter(base_price_per_unit__lte=max_price)
 
         serializer = EnergyListingSerializer(qs, many=True)
         return Response(serializer.data)
 
+        
 class ProducerListingsView(APIView):
     permission_classes = [IsAuthenticated, IsProducer]
 
@@ -192,16 +191,16 @@ class ListingCreateView(APIView):
         )
         if serializer.is_valid():
             listing = serializer.save(
-                producer=request.user,
-                status="active",
-                active=True,
+                producer         = request.user,
+                status           = "pending",    # ← pending not active
+                active           = False,        # ← not live until admin approves
+                is_admin_verified = False,
             )
-            return Response(
-                EnergyListingSerializer(listing).data,
-                status=status.HTTP_201_CREATED,
-            )
+            return Response({
+                "message": "Listing submitted for admin approval.",
+                "listing": EnergyListingSerializer(listing).data,
+            }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class ListingDetailView(APIView):
     permission_classes = [IsAuthenticated]

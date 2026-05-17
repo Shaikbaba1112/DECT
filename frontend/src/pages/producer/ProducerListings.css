@@ -1,0 +1,25 @@
+.pending-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.9rem 1.2rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(240,165,0,0.3);
+  background: rgba(240,165,0,0.07);
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.pending-notice-title {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--warning);
+  margin-bottom: 0.2rem;
+}
+
+.pending-notice-sub {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.5;
+}

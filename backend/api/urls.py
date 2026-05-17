@@ -62,6 +62,9 @@ from .admin_views import (
     AdminBroadcastView,
     ActiveBroadcastView,
     AdminPricingConfigView,
+    AdminListingApprovalsView,
+    AdminListingReviewView,
+    AdminListingStatsView,
     
 )
 
@@ -139,5 +142,10 @@ urlpatterns = [
     path("admin-api/audit-logs/",          AdminAuditLogView.as_view(),         name="admin-audit"),
     path("admin-api/broadcast/",           AdminBroadcastView.as_view(),        name="admin-broadcast"),
     path("admin-api/pricing-config/",      AdminPricingConfigView.as_view(),    name="admin-pricing"),
+
+
+    path("admin-api/listing-approvals/",AdminListingApprovalsView.as_view(),name="admin-listing-approvals"),
+    path("admin-api/listing-approvals/<int:pk>/review/",AdminListingReviewView.as_view(), name="admin-listing-review"),
+    path("admin-api/listing-stats/",AdminListingStatsView.as_view(), name="admin-listing-stats"),
 
 ]
